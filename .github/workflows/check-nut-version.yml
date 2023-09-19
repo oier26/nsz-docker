@@ -1,0 +1,34 @@
+name: Update edge image
+on:
+  schedule:
+    - cron: "0 1 * * *"
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.REPO_SCOPED_TOKEN }}
+      - name: Fetch release version
+        id: fetch-release
+        run: |
+          export NSZ_COMMIT_REF=$(curl -sL https://api.github.com/repos/nicoboss/nsz/commits/master | jq -r '.sha')
+          export NSZ_COMMIT_REF_SHORT=${NSZ_COMMIT_REF:0:7}
+          if [ -n "$NSZ_COMMIT_REF" ] && [ "$NSZ_COMMIT_REF" != "null" ]; then
+            echo "Updated APP_VERSION with $NSZ_COMMIT_REF_SHORT in .github/workflows/docker-publish.yml"
+            sed -ri "s/^(\s*)(APP_VERSION\s*:\s*.*\s*$)/\1APP_VERSION: \"$NSZ_COMMIT_REF_SHORT\"/" .github/workflows/docker-publish.yml
+            sed -ri "s/^(\s*)(COMMIT_REF\s*:\s*.*\s*$)/\1COMMIT_REF: \"$NSZ_COMMIT_REF\"/" .github/workflows/docker-publish.yml
+            sed -ri "s/^(\s*)(COMMIT_REF_SHORT\s*:\s*.*\s*$)/\1COMMIT_REF_SHORT: \"$NSZ_COMMIT_REF_SHORT\"/" .github/workflows/docker-publish.yml
+            echo "version=${NSZ_COMMIT_REF_SHORT}" >> $GITHUB_OUTPUT
+          fi
+      - name: Check for modified files
+        id: git-check
+        run: echo modified=$([ -z "`git status --porcelain`" ] && echo "false" || echo "true") >> $GITHUB_OUTPUT
+      - name: Commit latest release version
+        if: steps.git-check.outputs.modified == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/docker-publish.yml
+          git commit -m "ci(docker-publish): update nsz ref to ${{ steps.fetch-release.outputs.version }}"
+          git push

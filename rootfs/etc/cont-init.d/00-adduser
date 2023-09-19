@@ -1,0 +1,23 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+
+PUID=${PUID:-911}
+PGID=${PGID:-911}
+
+groupmod -o -g "$PGID" nsz
+usermod -o -u "$PUID" nsz
+
+echo '
+───────────────────────────────────────
+GID/UID
+───────────────────────────────────────'
+echo "
+User UID:    $(id -u nsz)
+User GID:    $(id -g nsz)
+───────────────────────────────────────
+"
+
+lsiown nsz:nsz /app
+lsiown nsz:nsz /conf
+lsiown nsz:nsz /titles
+lsiown nsz:nsz /output

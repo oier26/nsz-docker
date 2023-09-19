@@ -1,0 +1,14 @@
+version: '2.1'
+services:
+  nsz:
+    image: oier26/nsz:latest
+    container_name: nsz
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: Europe/Madrid
+    volumes:
+      - /conf:/conf
+      - /titles:/titles
+      - /output:/output
+    restart: always

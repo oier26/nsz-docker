@@ -1,0 +1,37 @@
+#!/usr/bin/with-contenv bash
+
+PUID="${PUID:-1000}"
+PGID="${PGID:-1000}"
+
+echo '
+-------------------------------------
+Checking conf folder... 
+-------------------------------------'
+if [ ! -f "/conf/keys.txt" ]; then
+  echo ""
+  echo "keys.txt not found! Creating from keys_template.txt..."
+  cp -v /conf/keys_template.txt /conf/keys.txt
+fi
+
+if [ -f "/conf/keys.txt" ]; then
+  echo ""
+  echo "Found keys.txt! Copying back to /app..."
+  cp -vf /conf/keys.txt /app/keys.txt
+  chown "$PUID":"$PGID" /app/keys.txt
+fi
+
+if [ ! -f "/conf/schedule.json" ]; then
+  echo ""
+  echo "schedule.json not found! Creating from schedule_template.json..."
+  cp -v /conf/schedule_template.json /conf/schedule.json
+fi
+
+if [ -f "/conf/schedule.json" ]; then
+  echo ""
+  echo "Found schedule.json!"
+  chown "$PUID":"$PGID" /conf/schedule.json
+fi
+
+echo '
+-------------------------------------
+'

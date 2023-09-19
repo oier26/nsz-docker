@@ -1,0 +1,26 @@
+#!/usr/bin/with-contenv bash
+
+echo '
+-------------------------------------
+Updating /etc/crontabs/root...
+-------------------------------------'
+
+# reset crontabs file
+echo "" >/etc/crontabs/root
+
+echo cat "/conf/schedule.json" | jq -c -r '.[]' | while read -r row; do
+    subfolder=$(echo "${row}" | jq -r '.subfolder|tostring')
+    schedule=$(echo "${row}" | jq -r '.schedule|tostring')
+    options=$(echo "${row}" | jq -r '.options|tostring')
+    command="python /app/nsz.py ${options} /titles/${subfolder}"
+
+    echo "Found schedule for subfolder ${subfolder}: ${schedule}"
+    echo "Options to be executed: ${options}"
+    echo "${schedule} ${command}" > /etc/crontabs/root
+    echo "Added ${command} schedule to /etc/crontabs/root..."
+done
+
+echo "
+Done.
+-------------------------------------
+"
